@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+#Auto to update problemsolvingresult table
+PROCESS_NUM=$(ps -ef | grep "CodehubAutoSolveTable" | grep -v "grep" | wc -l)
+if [[ $PROCESS_NUM -lt 1 ]]
+then
+	(javac -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoSolveTable.java
+	java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoSolveTable) &
+else
+	echo "CodehubAutoSolveTable: already run!";
+fi
