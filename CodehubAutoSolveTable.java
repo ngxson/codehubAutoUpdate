@@ -17,7 +17,7 @@ public class CodehubAutoSolveTable {
 
 	// delay time between updates
 	static int DELAY = 10; // default delay in minutes
-	static final boolean DEBUG = true;
+	static final boolean DEBUG = false;
 
 	static int RunTimes = 0;
 	static Connection conn = null;
@@ -88,18 +88,19 @@ public class CodehubAutoSolveTable {
 			ResultSet rs = stmt.executeQuery(sql);
 			//PreparedStatement pst_del = (PreparedStatement) conn.prepareStatement("DELETE FROM problemsolvingresult");
 			//pst_del.executeUpdate();
+			int pid, submit, done;
 
 			// STEP 5: Extract data from result set
 			while (rs.next()) {
 				// Retrieve by column name
-				int pid = rs.getInt("problemId");
-				int submit = rs.getInt("submittedUser");
-				int done = rs.getInt("finishedUser");
+				pid = rs.getInt("problemId");
+				submit = rs.getInt("submittedUser");
+				done = rs.getInt("finishedUser");
 
 				// Display values
-				System.out.print("pid: " + pid);
-				System.out.print(", submit: " + submit);
-				System.out.println(", done: " + done);
+				if (DEBUG) System.out.println("pid: " + pid +
+					", submit: " + submit +
+					", done: " + done);
 
 				// insert
 				PreparedStatement pst_del = (PreparedStatement) conn.prepareStatement(
