@@ -1,12 +1,23 @@
 #!/bin/bash
 
+javac -cp .:./mysql-connector-java-5.1.40-bin.jar *.java
 
-#Auto to update problemsolvingresult table
+#Auto update problemsolvingresult table
 PROCESS_NUM=$(ps -ef | grep "CodehubAutoSolveTable" | grep -v "grep" | wc -l)
 if [[ $PROCESS_NUM -lt 1 ]]
 then
-	(javac -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoSolveTable.java
-	java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoSolveTable) &
+	(java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoSolveTable) &
 else
 	echo "CodehubAutoSolveTable: already run!";
+fi
+
+sleep 1m;
+
+#Auto update rankingtable
+PROCESS_NUM=$(ps -ef | grep "CodehubAutoRankingTable" | grep -v "grep" | wc -l)
+if [[ $PROCESS_NUM -lt 1 ]]
+then
+	(java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoRankingTable) &
+else
+	echo "CodehubAutoRankingTable: already run!";
 fi
