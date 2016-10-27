@@ -23,7 +23,8 @@ public class CodehubAutoRankingTable {
 	static Connection conn = null;
 	static Statement stmt = null;
 
-	static String sql = "select rankingTable.userId, rankingTable.username, CONCAT(rankingTable.firstname, \" \", rankingTable.lastname) AS fullname, rankingTable.totalScore AS score, rankingTable.rank from " +
+	// rankingTable.username, CONCAT(rankingTable.firstname, \" \", rankingTable.lastname) AS fullname,
+	static String sql = "select rankingTable.userId, rankingTable.totalScore AS score, rankingTable.rank from " +
 			"(select userId, username, totalScore, firstname, lastname, " +
 			"  @curRank := IF(@prevRank = totalScore, @curRank, @incRank) AS rank, " +
 			"  @incRank := @incRank + 1, " +
@@ -61,15 +62,13 @@ public class CodehubAutoRankingTable {
 			// Create table if not existed
 			sql_create = "create table if not exists rankingtable(" +
 					"userId int PRIMARY KEY, " +
-					"username char(200), " +
-					"fullname char(200), " +
 					"score int, " +
 					"rank int);";
 			PreparedStatement pst = (PreparedStatement) conn.prepareStatement(sql_create);
 			pst.executeUpdate();
-			pst = (PreparedStatement) conn.prepareStatement(
-				"ALTER TABLE rankingtable CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;");
-			pst.executeUpdate();
+			//pst = (PreparedStatement) conn.prepareStatement(
+			//	"ALTER TABLE rankingtable CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;");
+			//pst.executeUpdate();
 
 			updateTable();
 		} catch (ClassNotFoundException e) {
@@ -99,21 +98,17 @@ public class CodehubAutoRankingTable {
 			//PreparedStatement pst_del = (PreparedStatement) conn.prepareStatement("DELETE FROM problemsolvingresult");
 			//pst_del.executeUpdate();
 			int uid, score, rank;
-			String uname, fullname;
 
 			// STEP 5: Extract data from result set
 			while (rs.next()) {
 				// Retrieve by column name
 				uid = rs.getInt("userId");
-				uname = rs.getString("username");
-				fullname = rs.getString("fullname");
 				score = rs.getInt("score");
 				rank = rs.getInt("rank");
 
 				// Display values
 				if(DEBUG) System.out.println(
 					"uid: " + uid +
-					", fullname: " + fullname +
 					", rank: " + rank);
 
 				// insert
@@ -121,8 +116,8 @@ public class CodehubAutoRankingTable {
 						"DELETE FROM rankingtable WHERE userId=" + uid);
 				pst_del.executeUpdate();
 				PreparedStatement pstt = (PreparedStatement) conn.prepareStatement(
-						"INSERT INTO rankingtable (userId, username, fullname, score, rank) VALUES("
-								+ uid + ",\"" + uname + "\",\"" + fullname + "\"," + score + "," + rank + "); ");
+						"INSERT INTO rankingtable (userId, score, rank) VALUES("
+								+ uid + "," + score + "," + rank + "); ");
 				pstt.executeUpdate();
 			}
 		} catch (SQLException se) {
