@@ -23,17 +23,38 @@ public class CodehubAutoSolveTable {
 	static Connection conn = null;
 	static Statement stmt = null;
 
-	static String sql = "SELECT tab1.problemId, tab1.numOfUser AS submittedUser, tab2.numOfUser AS finishedUser "
-			+ "FROM (SELECT problemId, count(userId) as numOfUser from( "
-			+ "	select problems.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId, problems.defaultScore "
-			+ "	from problems left join submissions on problems.problemId = submissions.problemId "
-			+ "	group by problems.problemId, submissions.userId) as s " + "group by problemId) as tab1 " + "LEFT JOIN "
-			+ "(select problems.problemId, count(s.userId) as numOfUser from( "
-			+ "	select problems.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId, problems.defaultScore "
-			+ "	from problems left join submissions on problems.problemId = submissions.problemId "
-			+ "	group by problems.problemId, submissions.userId having userScore = defaultScore) as s  "
-			+ "	right join problems on s.problemId = problems.problemId " + "group by problems.problemId) as tab2 "
-			+ "ON tab1.problemId=tab2.problemId";
+	static String sql = "SELECT tab1.courseProblemId, tab1.problemId, tab1.courseId," + 
+			"COALESCE(tab1.numOfUser, 0) AS submittedUser," + 
+			"COALESCE(tab2.numOfUser, 0) AS finishedUser FROM " + 
+			"	(SELECT courseProblemId, problemId, courseId, count(userId) as numOfUser from( " + 
+			"		SELECT tab2.courseProblemId, tab2.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId " + 
+			"		FROM courseproblems AS tab2 " + 
+			"		left join submissions " + 
+			"		on tab2.problemId = submissions.problemId AND tab2.courseId = submissions.courseId " + 
+			"		WHERE tab2.isActive=1 " + 
+			"		GROUP BY tab2.courseProblemId, submissions.userId) " + 
+			"	as s " + 
+			"	GROUP BY courseProblemId " + 
+			"	) as tab1 " + 
+			"LEFT JOIN " + 
+			"	(SELECT courseProblemId, problemId, courseId, count(userId) as numOfUser from( " + 
+			"		SELECT tab2.courseProblemId, tab2.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId, tab2.defaultScore " + 
+			"		FROM  " + 
+			"			(SELECT cp.courseProblemId, cp.problemId, p.defaultScore, cp.isActive, cp.courseId  " + 
+			"			FROM courseproblems AS cp " + 
+			"			LEFT JOIN problems AS p " + 
+			"			ON cp.problemId = p.problemId " + 
+			"			WHERE cp.isActive=1	 " + 
+			"			) AS tab2 " + 
+			"		left join submissions " + 
+			"		on tab2.problemId = submissions.problemId AND tab2.courseId = submissions.courseId " + 
+			"		GROUP BY tab2.courseProblemId, submissions.userId " + 
+			"		HAVING userScore = defaultScore) " + 
+			"	as s " + 
+			"	GROUP BY courseProblemId " + 
+			"	) as tab2 " + 
+			"ON tab1.courseProblemId=tab2.courseProblemId " + 
+			"WHERE tab1.courseId IS NOT NULL";
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
@@ -56,8 +77,9 @@ public class CodehubAutoSolveTable {
 			String sql_create;
 			String sql;
 			// Create table if not existed
-			sql_create = "create table if not exists problemsolvingresult(" + "problemId int PRIMARY KEY,"
-					+ " submittedUser int," + " finishedUser int);";
+			sql_create = "create table if not exists problemsolvingresult(" + "courseProblemId int PRIMARY KEY," + 
+					" problemId int," + " courseId int," +
+					" submittedUser int," + " finishedUser int);";
 			PreparedStatement pst = (PreparedStatement) conn.prepareStatement(sql_create);
 			int numRowsChanged = pst.executeUpdate();
 
@@ -88,27 +110,31 @@ public class CodehubAutoSolveTable {
 			ResultSet rs = stmt.executeQuery(sql);
 			//PreparedStatement pst_del = (PreparedStatement) conn.prepareStatement("DELETE FROM problemsolvingresult");
 			//pst_del.executeUpdate();
-			int pid, submit, done;
+			int cpid, pid, cid, submit, done, stt=0;
+			String sql_update;
 
 			// STEP 5: Extract data from result set
 			while (rs.next()) {
 				// Retrieve by column name
+				cpid = rs.getInt("courseProblemId");
 				pid = rs.getInt("problemId");
+				cid = rs.getInt("courseId");
 				submit = rs.getInt("submittedUser");
 				done = rs.getInt("finishedUser");
+				sql_update = "INSERT INTO problemsolvingresult (" + "courseProblemId, problemId, courseId, submittedUser, finishedUser) VALUES" + "("
+						+ cpid + "," + pid + "," + cid + "," + submit + "," + done + "); ";
 
 				// Display values
-				if (DEBUG) System.out.println("pid: " + pid +
-					", submit: " + submit +
-					", done: " + done);
+				if (DEBUG) {
+					stt++;
+					System.out.println(stt+sql_update);
+				}
 
 				// insert
 				PreparedStatement pst_del = (PreparedStatement) conn.prepareStatement(
-						"DELETE FROM problemsolvingresult WHERE problemId=" + pid);
+						"DELETE FROM problemsolvingresult WHERE courseProblemId=" + cpid);
 				pst_del.executeUpdate();
-				PreparedStatement pstt = (PreparedStatement) conn.prepareStatement(
-						"INSERT INTO problemsolvingresult (" + "problemId, submittedUser, finishedUser) VALUES" + "("
-								+ pid + "," + submit + "," + done + "); ");
+				PreparedStatement pstt = (PreparedStatement) conn.prepareStatement(sql_update);
 				pstt.executeUpdate();
 			}
 		} catch (SQLException se) {
