@@ -23,38 +23,36 @@ public class CodehubAutoSolveTable {
 	static Connection conn = null;
 	static Statement stmt = null;
 
-	static String sql = "SELECT tab1.courseProblemId, tab1.problemId, tab1.courseId," + 
-			"COALESCE(tab1.numOfUser, 0) AS submittedUser," + 
-			"COALESCE(tab2.numOfUser, 0) AS finishedUser FROM " + 
-			"	(SELECT courseProblemId, problemId, courseId, count(userId) as numOfUser from( " + 
-			"		SELECT tab2.courseProblemId, tab2.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId " + 
-			"		FROM courseproblems AS tab2 " + 
-			"		left join submissions " + 
-			"		on tab2.problemId = submissions.problemId AND tab2.courseId = submissions.courseId " + 
-			"		WHERE tab2.isActive=1 " + 
-			"		GROUP BY tab2.courseProblemId, submissions.userId) " + 
-			"	as s " + 
-			"	GROUP BY courseProblemId " + 
-			"	) as tab1 " + 
-			"LEFT JOIN " + 
-			"	(SELECT courseProblemId, problemId, courseId, count(userId) as numOfUser from( " + 
-			"		SELECT tab2.courseProblemId, tab2.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId, tab2.defaultScore " + 
-			"		FROM  " + 
-			"			(SELECT cp.courseProblemId, cp.problemId, p.defaultScore, cp.isActive, cp.courseId  " + 
-			"			FROM courseproblems AS cp " + 
-			"			LEFT JOIN problems AS p " + 
-			"			ON cp.problemId = p.problemId " + 
-			"			WHERE cp.isActive=1	 " + 
-			"			) AS tab2 " + 
-			"		left join submissions " + 
-			"		on tab2.problemId = submissions.problemId AND tab2.courseId = submissions.courseId " + 
-			"		GROUP BY tab2.courseProblemId, submissions.userId " + 
-			"		HAVING userScore = defaultScore) " + 
-			"	as s " + 
-			"	GROUP BY courseProblemId " + 
-			"	) as tab2 " + 
-			"ON tab1.courseProblemId=tab2.courseProblemId " + 
-			"WHERE tab1.courseId IS NOT NULL";
+	static String sql = "SELECT tab1.courseProblemId, tab1.problemId, COALESCE(tab1.courseId, -1) AS courseId, tab1.numOfUser submittedUser,  " +
+		"COALESCE(tab2.numOfUser, 0) finishedUser FROM  " +
+		"	(SELECT courseProblemId, problemId, courseId, COALESCE(count(userId), 0) as numOfUser from(  " +
+		"		SELECT tab2.courseProblemId, tab2.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId  " +
+		"		FROM courseproblems AS tab2  " +
+		"		left join submissions  " +
+		"		on tab2.problemId = submissions.problemId AND tab2.courseId = submissions.courseId  " +
+		"		WHERE tab2.isActive=1  " +
+		"		GROUP BY tab2.courseProblemId, submissions.userId)  " +
+		"	as s  " +
+		"	GROUP BY courseProblemId  " +
+		"	) as tab1  " +
+		"LEFT JOIN  " +
+		"	(SELECT courseProblemId, problemId, courseId, COALESCE(count(userId), 0) as numOfUser from(  " +
+		"		SELECT tab2.courseProblemId, tab2.problemId, submissions.userId, max(submissions.resultScore) as userScore, submissions.courseId, tab2.defaultScore  " +
+		"		FROM   " +
+		"			(SELECT cp.courseProblemId, cp.problemId, p.defaultScore, cp.isActive, cp.courseId   " +
+		"			FROM courseproblems AS cp  " +
+		"			LEFT JOIN problems AS p  " +
+		"			ON cp.problemId = p.problemId  " +
+		"			WHERE cp.isActive=1	  " +
+		"			) AS tab2  " +
+		"		left join submissions  " +
+		"		on tab2.problemId = submissions.problemId AND tab2.courseId = submissions.courseId  " +
+		"		GROUP BY tab2.courseProblemId, submissions.userId  " +
+		"		HAVING userScore = defaultScore)  " +
+		"	as s  " +
+		"	GROUP BY courseProblemId  " +
+		"	) as tab2  " +
+		"ON tab1.courseProblemId=tab2.courseProblemId ";
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
