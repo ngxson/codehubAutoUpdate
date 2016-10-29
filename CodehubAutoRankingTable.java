@@ -12,8 +12,8 @@ public class CodehubAutoRankingTable {
 	static final String DB_URL = "jdbc:mysql://localhost:3306/uetcodehub?useUnicode=yes&characterEncoding=UTF-8";
 
 	// Database credentials
-	static final String USER = "homestead";
-	static final String PASS = "secret";
+	static String USER = "homestead";
+	static String PASS = "secret";
 
 	// delay time between updates
 	static int DELAY = 15; // default delay in minutes
@@ -41,9 +41,28 @@ public class CodehubAutoRankingTable {
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
+		int first_delay = 1;
+		
+		/*
+			args[0]: Delay to start program (in second)
+			args[1]: Delay between 2 queries (in minute)
+			args[2]: User name
+			args[3]: Password
+		*/
+		
 		if (args.length != 0) {
-			System.out.println("timed=" + args[0]);
-			DELAY = Integer.valueOf(args[0]);
+			System.out.println("delay=" + args[0]);
+			first_delay = Integer.valueOf(args[0]);
+			System.out.println("timed=" + args[1]);
+			DELAY = Integer.valueOf(args[1]);
+			USER = args[2];
+			PASS = args[3];
+		}
+		
+		try {
+			Thread.sleep(first_delay * 1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 
 		// STEP 2: Register JDBC driver
