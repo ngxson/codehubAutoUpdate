@@ -1,23 +1,29 @@
 #!/bin/bash
 
-javac -cp .:./mysql-connector-java-5.1.40-bin.jar *.java
+###########################
+## USAGE:
+## CodehubAutoSolveTable [delay to run, in sec] [delay between updates, in min] [SQL user] [SQL pass]
+###########################
+
+SQL_USER="homestead";
+SQL_PASS="secret";
+
+javac -cp .:./mysql-connector-java-5.1.40-bin.jar *.java; 
 
 #Auto update problemsolvingresult table
 PROCESS_NUM=$(ps -ef | grep "CodehubAutoSolveTable" | grep -v "grep" | wc -l)
 if [[ $PROCESS_NUM -lt 1 ]]
 then
-	(java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoSolveTable) &
+	(java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoSolveTable 0 10 $SQL_USER $SQL_PASS) &
 else
 	echo "CodehubAutoSolveTable: already run!";
 fi
 
-sleep 1m;
-
 #Auto update rankingtable
-PROCESS_NUM=$(ps -ef | grep "CodehubAutoRankingTable" | grep -v "grep" | wc -l)
-if [[ $PROCESS_NUM -lt 1 ]]
+PROCESS_NUM_1=$(ps -ef | grep "CodehubAutoRankingTable" | grep -v "grep" | wc -l)
+if [[ $PROCESS_NUM_1 -lt 1 ]]
 then
-	(java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoRankingTable) &
+	(java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubAutoRankingTable 30 15 $SQL_USER $SQL_PASS) &
 else
 	echo "CodehubAutoRankingTable: already run!";
 fi
