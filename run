@@ -2,6 +2,10 @@
 
 ###########################
 ## USAGE:
+## ./run 1 : Seed and run
+## ./run : Just run
+## 
+## For java components:
 ## CodehubAutoSolveTable [delay to run, in sec] [delay between updates, in min] [SQL user] [SQL pass]
 ###########################
 
@@ -9,6 +13,14 @@ SQL_USER="homestead";
 SQL_PASS="secret";
 
 javac -cp .:./mysql-connector-java-5.1.40-bin.jar *.java; 
+
+#Seeding the userproblemscore table
+if [[ $1 -eq 1 ]]
+then
+	echo "== Running userproblemscore table seeder... =="
+	java -cp .:./mysql-connector-java-5.1.40-bin.jar CodehubSeederScoreTable $SQL_USER $SQL_PASS
+	echo "== DONE =="
+fi
 
 #Auto update problemsolvingresult table
 PROCESS_NUM=$(ps -ef | grep "CodehubAutoSolveTable" | grep -v "grep" | wc -l)
@@ -27,3 +39,6 @@ then
 else
 	echo "CodehubAutoRankingTable: already run!";
 fi
+
+echo "ALL DONE!";
+
