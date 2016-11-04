@@ -24,20 +24,18 @@ public class CodehubAutoRankingTable {
 	static Statement stmt = null;
 
 	// rankingTable.username, CONCAT(rankingTable.firstname, \" \", rankingTable.lastname) AS fullname,
-	static String sql = "select rankingTable.userId, rankingTable.totalScore AS score, rankingTable.rank from " +
-			"(select userId, username, totalScore, firstname, lastname, " +
-			"  @curRank := IF(@prevRank = totalScore, @curRank, @incRank) AS rank, " +
-			"  @incRank := @incRank + 1, " +
-			"  @prevRank := totalScore " +
-			"from " +
-			"  (select b.userId as userId, b.username as username, sum(b.maxScore) as totalScore, b.firstname, b.lastname " +
-			"  from " +
-			"    (select users.userId, users.username, submissions.problemId, submissions.courseId, users.firstname, users.lastname,  COALESCE(max(resultScore),-1) as maxScore " +
-			"    from submissions right join users on submissions.userId = users.userId " +
-			"    group by users.userId, problemId, courseId, users.firstname, users.lastname) as b " +
-			"  group by b.userId order by totalScore desc) as c, " +
-			"  (SELECT @curRank :=0, @prevRank := NULL, @incRank := 1) as r " +
-			") as rankingTable ";
+	static String sql = "SELECT rankingTable.userId, rankingTable.totalScore AS score, rankingTable.rank FROM "+
+				"	(SELECT userId, totalScore, "+
+				"		@curRank := IF(@prevRank = totalScore, @curRank, @incRank) AS rank,  "+
+				"		@incRank := @incRank + 1,  "+
+				"		@prevRank := totalScore "+
+				"		FROM "+
+				"		(SELECT userId, SUM(maxScore) AS totalScore "+
+				"		FROM userproblemscore "+
+				"		WHERE examId=-1 "+
+				"		GROUP BY userId ORDER BY totalScore DESC) AS c, "+
+				"	(SELECT @curRank :=0, @prevRank := NULL, @incRank := 1) AS r  "+
+				") AS rankingTable";
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {

@@ -23,7 +23,7 @@ public class CodehubSeederScoreTable {
 	static Connection conn = null;
 	static Statement stmt = null;
 
-	static String sql = "SELECT userId, problemId, examId, courseId, COALESCE(MAX(resultScore), -1) AS maxScore, submitId "+
+	static String sql = "SELECT userId, problemId, COALESCE(examId, -1) AS examId, courseId, COALESCE(MAX(resultScore), -1) AS maxScore, submitId "+
 			"FROM submissions " +
 			"GROUP BY userId, problemId, examId, courseId";
 
